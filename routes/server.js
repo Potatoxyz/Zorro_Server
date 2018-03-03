@@ -8,7 +8,9 @@ var path = require('path');
 var jwt = require('jsonwebtoken');
 router.post('/upload', function (req, res) {
     var typeCheck = req.is('multipart/form-data');
+    var targetFile = req.get('targetFile');
     console.log(typeCheck);
+    console.log(targetFile);
     var receiveToken = req.get('Authorization');
     if (typeCheck) {
         if (receiveToken) {
@@ -22,6 +24,7 @@ router.post('/upload', function (req, res) {
                     var form = new multiparty.Form({ uploadDir: path.resolve(__dirname, '../public/upload/') });
                     form.parse(req, function (err, fields, files) {
                         if (files) {
+                            // fs.renameSync(files.file[0].path,path.resolve(__dirname,'../public/upload/'+chapter+'/'+files.file[0].originalFilename));
                             console.log('get file');
                             res.end();
                         }

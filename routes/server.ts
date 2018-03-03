@@ -4,9 +4,12 @@ var multiparty = require('multiparty');
 var fs = require("fs");
 var path=require('path');
 var jwt = require('jsonwebtoken');
+
 router.post('/upload', function(req, res) {
    let typeCheck=req.is('multipart/form-data');
+   let targetFile=req.get('targetFile');
     console.log(typeCheck);
+    console.log(targetFile);
     let receiveToken=req.get('Authorization');
     if(typeCheck){
         if(receiveToken){
@@ -20,10 +23,11 @@ router.post('/upload', function(req, res) {
                     var form = new multiparty.Form({uploadDir:path.resolve(__dirname,'../public/upload/')});
                     form.parse(req, function(err, fields, files) {
                         if(files){
+                            // fs.renameSync(files.file[0].path,path.resolve(__dirname,'../public/upload/'+chapter+'/'+files.file[0].originalFilename));
                             console.log('get file');
                             res.end();
                         }
-                    })
+                    });
                 }
             });
         }
