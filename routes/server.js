@@ -6,11 +6,35 @@ var multiparty = require('multiparty');
 var fs = require("fs");
 var path = require('path');
 var jwt = require('jsonwebtoken');
+var projectPath = path.resolve(__dirname, '../../Zorro_Server');
+var checkSubjectPath = function (subjectPath) {
+    return fs.existsSync(subjectPath);
+};
+var checkChapterPath = function (chapterPath) {
+    return fs.existsSync(chapterPath);
+};
+var verifyToken = function (r) {
+    var receiveToken = r.get('Authorization');
+    var pass = false;
+    jwt.verify(receiveToken, 'heiheihei', function (err, decoded) {
+        console.log(decoded);
+        if (!err) {
+            pass = true;
+        }
+    });
+    return pass;
+};
+router.get('/getPic', function (req, res) {
+    if (verifyToken(req)) {
+        var Result = { success: true, message: null, result: null };
+        res.status(200).send(Result);
+    }
+    else {
+        res.status(403).send({ res: '用户授权错误,请重新登录!' });
+    }
+});
 router.post('/upload', function (req, res) {
     var typeCheck = req.is('multipart/form-data');
-    var targetFile = req.get('targetFile');
-    console.log(typeCheck);
-    console.log(targetFile);
     var receiveToken = req.get('Authorization');
     if (typeCheck) {
         if (receiveToken) {
@@ -21,13 +45,42 @@ router.post('/upload', function (req, res) {
                     res.end();
                 }
                 else {
-                    var form = new multiparty.Form({ uploadDir: path.resolve(__dirname, '../public/upload/') });
+                    var form = new multiparty.Form({ uploadDir: projectPath + "/public/upload" });
                     form.parse(req, function (err, fields, files) {
                         if (files) {
-                            // fs.renameSync(files.file[0].path,path.resolve(__dirname,'../public/upload/'+chapter+'/'+files.file[0].originalFilename));
                             console.log('get file');
-                            res.end();
                         }
+                        if (fields) {
+                            // fs.renameSync(files.file[0].path,path.resolve(__dirname,'../public/upload/'+chapter+'/'+files.file[0].originalFilename));
+                            var arr = fields.targetfile[0].toString().split(',');
+                            var subject = arr[0];
+                            var chapter = arr[1];
+                            //console.log(arr);
+                            var subjectPath = projectPath + "/public/upload/" + subject;
+                            var chapterPath = projectPath + "/public/upload/" + subject + "/" + chapter;
+                            // let ifExsitSubject=fs.existsSync(subjectPath);
+                            if (!checkSubjectPath(subjectPath)) {
+                                try {
+                                    fs.mkdirSync(subjectPath);
+                                    if (checkSubjectPath(subjectPath)) {
+                                        try {
+                                            fs.mkdirSync(chapterPath);
+                                            if (checkChapterPath(chapterPath)) {
+                                                //files.file[0].originalFilename
+                                                fs.renameSync(files.file[0].path, chapterPath + "/" + files.file[0].originalFilename);
+                                            }
+                                        }
+                                        catch (err) { }
+                                    }
+                                }
+                                catch (err) { }
+                            }
+                            else {
+                            }
+                            //console.log(ifExsitSubject);
+                            //console.log(ifExsitChapter);
+                        }
+                        res.end();
                     });
                 }
             });
