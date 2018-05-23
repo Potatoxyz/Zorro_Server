@@ -5,7 +5,7 @@ var fs = require("fs");
 var path = require('path');
 var jwt = require('jsonwebtoken');
 var projectPath=path.resolve(__dirname,'../../Zorro_Server');
-
+var Data=require('../data/user.json');
 var checkSubjectPath=function (subjectPath) {
     return fs.existsSync(subjectPath);
 };
@@ -48,15 +48,14 @@ router.post('/upload', function (req, res) {
                             console.log('get file');
                         }
                         if (fields) {
-                            // fs.renameSync(files.file[0].path,path.resolve(__dirname,'../public/upload/'+chapter+'/'+files.file[0].originalFilename));
-                            let arr=fields.targetfile[0].toString().split(',');
-                            let subject=arr[0];
-                            let chapter=arr[1];
-                            //console.log(arr);
+                            console.log(fields.subject[0].toString());
+                            console.log(fields.chapter[0].toString());
+                            console.log(fields.des[0].toString());
+                            let subject=fields.subject[0].toString();
+                            let chapter=fields.chapter[0].toString();
+                            let des=fields.des[0].toString();
                             let subjectPath=`${projectPath}/public/upload/${subject}`;
-                            let chapterPath=`${projectPath}/public/upload/${subject}/${chapter}`;
-                            // let ifExsitSubject=fs.existsSync(subjectPath);
-
+                            let chapterPath=`${projectPath}/public/upload/${subject}/第${chapter}章`;
                                 if(!checkSubjectPath(subjectPath)){
                                 try{
                                     fs.mkdirSync(subjectPath);
@@ -74,8 +73,6 @@ router.post('/upload', function (req, res) {
                             else{
 
                                 }
-                            //console.log(ifExsitSubject);
-                            //console.log(ifExsitChapter);
                         }
                         res.end()
                     });
@@ -92,28 +89,72 @@ router.post('/upload', function (req, res) {
     res.end();
 });
 router.post('/login', function (req, res) {
-    let userName = req.body.userName;
-    let password = req.body.password;
-    if (userName == '10086' && password == '123123') {
-        let older_token = jwt.sign({userName: userName, iat: Math.floor(Date.now() / 1000) - 30}, 'heiheihei');
-        let r: ResponseModel = {success: true, message: null, result: older_token};
-        console.log(req.body);
-        console.log(req.query);
-        console.log(req.params);
-        let receiveToken = req.get('Authorization');
-        console.log(receiveToken);
+    let data={
+        userName:req.body.userName,
+        password:req.body.password,
+        role:req.body.role
+    };
+    var r:ResponseModel={success:true,message:null,result:null};
+    var index:number=Data.findIndex(v=>v.userName==data.userName&&v.password==data.password);
+    var index1:number=Data.findIndex(v=>v.userName==data.userName);
+    console.log(Data[index]);
+    console.log(Data[index1]);
+    if(index==-1){
+        console.log("用户名或密码不正确！");
+        res.status(400).send({message:"用户名或密码不正确！",result:null});
+        res.end();
+    }
+    else if(index1==-1){
+        res.status(400).send({message:"用户名不存在！",result:null});
+        console.log("用户名不存在！");
+        res.end();
+    }
+    else{
+        r.success=true;r.message=Data[index].role;
+        console.log("成功！");
         res.send(r);
+        res.end();
     }
-    else {
-        let r: ResponseModel = {success: false, message: '用户名或密码错误！', result: null};
-    }
-    res.end();
-});
 
+    // if (err.message) {res.send(err);res.end(); console.log("失败！")}
+    // else {res.send(r);res.end(); console.log("成功！") }
+});
+router.post('/register', function (req, res) {
+    let data={
+        userName:req.body.userName,
+        password:req.body.password
+    };
+    var addUser=function () {
+        fs.writeFileSync(projectPath+"/data/user.json",JSON.stringify(Data),err => {
+            if (err) throw err;
+        })
+    };
+    var r:ResponseModel={success:true,message:"注册成功！",result:null};
+    var index=Data.findIndex(v=>v.userName==data.userName);
+    console.log(index);
+    if(index==-1){
+        Data.push(data);
+        console.log(JSON.stringify(Data));
+        addUser();
+        console.log('用户写入成功');
+        res.send(r);
+        res.end();
+    }
+    else{
+        let r:ResponseErrorModel={message:'用户名已经存在！',result:null};
+        res.status(400).send(r);
+        res.end();
+    }
+
+});
 export class ResponseModel {
     success: boolean;
     message: string;
     result: any;
+}
+export class ResponseErrorModel{
+    message:string;
+    result:any;
 }
 
 module.exports = router;
