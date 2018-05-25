@@ -111,6 +111,7 @@ router.post('/login', function (req, res) {
     }
     else{
         r.success=true;r.message=Data[index].role;
+        r.result = jwt.sign({ foo: 'bar' }, 'heiheihei');
         console.log("成功！");
         res.send(r);
         res.end();
