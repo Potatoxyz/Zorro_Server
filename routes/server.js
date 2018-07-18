@@ -153,13 +153,13 @@ router.post('/register', function (req, res) {
         res.end();
     }
 });
-var ResponseModel = /** @class */ (function () {
+var ResponseModel = (function () {
     function ResponseModel() {
     }
     return ResponseModel;
 }());
 exports.ResponseModel = ResponseModel;
-var ResponseErrorModel = /** @class */ (function () {
+var ResponseErrorModel = (function () {
     function ResponseErrorModel() {
     }
     return ResponseErrorModel;
